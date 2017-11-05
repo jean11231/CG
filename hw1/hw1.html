@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 2%;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+</style>
+</head>
+
+<body>
+<div id="info">homework 1
+  <br/>
+  <br/>
+  <br/>
+  <button id="toggle" style="width:20%">Toggle Turn</button>
+  <button id="display"style="width:20%">Quartz</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<script>
+var scene, renderer, camera;
+var controls;
+var mesh, angle = 0,
+  turn = false;
+var hue = 0;
+var startTime,angleNow =0;
+var arrow = new THREE.Object3D();
+init();
+animate();
+
+$("#toggle").click(function() {
+
+  turn = !turn;
+  if (turn)
+    startTime = clock.getElapsedTime();
+	else
+  	angleNow = angle;
+});
+
+$("#display").click(function() {
+
+  if($("#display").text()=="Analog"){
+    $("#display").text("Sector");
+  }
+  else if($("#display").text()=="Sector"){
+    $("#display").text("Quartz");
+  }
+  else if($("#display").text()=="Quartz"){
+    $("#display").text("Analog");
+  }
+
+
+});
+
+function init() {
+
+  clock = new THREE.Clock();
+
+  scene = new THREE.Scene();
+  renderer = new THREE.WebGLRenderer({
+	antialias:true
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 500;
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  var geometry = new THREE.RingGeometry(0.01, 100, 40);
+
+  var material = new THREE.MeshBasicMaterial({
+    color: 0x444444,
+    side: THREE.DoubleSide
+  });
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.y = Math.PI;
+  scene.add(mesh);
+
+  var backPlane = new THREE.Mesh(new THREE.RingGeometry(0.01, 105, 40),new THREE.MeshBasicMaterial({
+    color: 0xdddddd,
+    side: THREE.DoubleSide
+  }));
+  backPlane.position.z = -0.1;
+  scene.add(backPlane);
+  var startLine = new THREE.Mesh(new THREE.BoxGeometry(5,20,1),new THREE.MeshBasicMaterial());
+  startLine.position.set(0,100,0.5);
+  scene.add(startLine);
+
+  var arrowA = new THREE.Mesh(new THREE.CylinderGeometry(0.5,5,10,40),new THREE.MeshBasicMaterial());
+  arrowA.position.set(0,75,5);
+  var arrowB = new THREE.Mesh(new THREE.CylinderGeometry(3,3,70,40),new THREE.MeshBasicMaterial());
+  arrowB.position.set(0,35,5);
+  arrow.add(arrowA,arrowB);
+  scene.add(arrow);
+
+  var gridXZ = new THREE.GridHelper(100, 10, 'red', 'white');
+  //scene.add(gridXZ);
+
+
+
+  window.addEventListener('resize', onWindowResize, false);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  controls.update();
+  if( turn && $("#display").text()=="Analog"){ //Quartz
+    var move = (clock.getElapsedTime() - startTime)/9.6;
+    angle = angleNow + move;
+    angle %= Math.PI*2;
+    mesh.geometry = new THREE.RingGeometry (0.01,100, 40);
+    arrow.visible = true;
+    console.log(angle);
+    arrow.rotation.z = -angle.toFixed(1);
+  }
+
+  else if (turn) {
+     var move = (clock.getElapsedTime() - startTime)/9.6;
+    	angle = angleNow + move;
+      angle %= Math.PI*2;
+      if($("#display").text()=="Sector"){ //Analog
+        arrow.visible = false;
+        mesh.geometry = new THREE.RingGeometry (0.01,100, 40, 2, Math.PI/2, angle);
+      }
+      if($("#display").text()=="Quartz"){ //sector
+        mesh.geometry = new THREE.RingGeometry (0.01,100, 40);
+        arrow.visible = true;
+        arrow.rotation.z = -angle;
+      }
+  }
+  else {
+    if($("#display").text()=="Sector"){
+      arrow.visible = false;
+      mesh.geometry = new THREE.RingGeometry (0.01,100, 40, 2, Math.PI/2, angle);
+    }
+    if($("#display").text()=="Quartz"){
+      mesh.geometry = new THREE.RingGeometry (0.01,100, 40);
+      arrow.visible = true;
+      arrow.rotation.z = -angle;
+    }
+    if($("#display").text()=="Analog"){
+      mesh.geometry = new THREE.RingGeometry (0.01,100, 40);
+      arrow.visible = true;
+      arrow.rotation.z = -angle;
+    }
+  }
+
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+
+</script>
+</body>
+
+</html>
