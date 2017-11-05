@@ -127,7 +127,7 @@ function onWindowResize() {
 function animate() {
   controls.update();
   if( turn && $("#display").text()=="Analog"){ //Quartz
-    var move = (clock.getElapsedTime() - startTime)/9.6;
+    var move = (clock.getElapsedTime() - startTime)/10;
     angle = angleNow + move;
     angle %= Math.PI*2;
     mesh.geometry = new THREE.RingGeometry (0.01,100, 40);
