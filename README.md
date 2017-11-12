@@ -20,11 +20,10 @@
 根據上課所說的，將本學期作業的資料夾建成repository
 - 建立index.html，為本學期的作業做一個title page
 - 上傳到github的gh-pages上
-	-index.html中：
+	- index.html中：
 	將有每次作業的animated gif以及url link.
 	把hw1改成html 並將資料填入
 	有link to your email account (以便通知作業有瑕疵需要補正）
-	
 	格式參考 : [範例](http://jyunming-chen.github.io/tutsplus/)
 
 - 參考[markdown files](https://help.github.com/articles/basic-writing-and-formatting-syntax/)的格式，為homework repository加上合適的readme.md (參考[學長的範例](https://github.com/ikatyang/javascript-development-guide/blob/master/README.md)）
