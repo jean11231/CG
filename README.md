@@ -31,13 +31,13 @@
 ## Homework 3  (Due 11/27/17) : Hierarchical Model
 1. 建構坦克模型：
 
-- 正確的機構(kinematic)模型，以及合理的joint angle limits
+- 正確的機構(kinematic)[模型](http://web.cse.ttu.edu.tw/jmchen/cg/fall17/tank.html)，以及合理的joint angle limits
 - 架設合適的燈光，設定合適的顏色
 2. 砲彈發射：
 
 - 初始位置：砲口; 發射方向：砲管方向; 發射速率：固定
 - 砲彈打到地面(y=0)即停止。停止後，才可以發射下一發砲彈。
-- [雜研與專題生] write "class" for cannonball, 使得可以發射多發砲彈, reference
+- [雜研與專題生] write "class" for cannonball, 使得可以發射多發砲彈, [reference](https://docs.google.com/presentation/d/17tTiIvHCruuUXcSnboq1dPTnf0tQtg53xqUdj3nE2zw/edit#slide=id.p)
 3. 簡單遊戲：
 
 - 坦克在中線(x = 0)上前後運動
