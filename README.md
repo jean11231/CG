@@ -45,4 +45,15 @@
 - 操作坦克，將標靶擊落
 - [bonus] 分隔畫面: god's eye view 以及 坦克操作員視角（以便瞄準）
 
+[Click here to see my Homework 3](https://jean11231.github.io/CG/hw2/hw2.html)
 
+## Homework 4  (Due 12/10/17) : OBJ model, Kinematic Drive, Rectangle-Circle Intersection, Dual Viewports
+
+- 在網路上找合適的車輛模型 (OBJ/MTL format)
+- 利用合適的loader將其匯入three.js 場景中，以適當大小呈現
+- 運用課堂上所教的“kinematic drive"，以鍵盤控制車輛
+- 在場景中佈置大小不同的圓形障礙物。可以用threejs所提供的geometry, 或是使用circular billboard (with cut-out texture)
+- 實作collision detection程式，使得車輛與障礙物相撞時立即停止。使用者須自行將車輛駛出。請務必在所錄的animated.gif中示範此效果
+- 螢幕分割成左右兩viewports: 一邊為上帝視角 (god's eye view), 一編為駕駛的第三人稱視角 (third person view)
+
+[Click here to see my Homework 4](https://jean11231.github.io/CG/hw3/hw3.html)
