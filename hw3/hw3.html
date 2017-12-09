@@ -18,7 +18,7 @@
 	#info {
 		position: absolute;
 		top: 0px; width: 100%;
-		
+
 		padding: 5px;
 		text-align: center;
 		color: #ffff00
@@ -29,9 +29,9 @@
 </style>
 </head>
 
-<body> 
+<body>
 	<div id="info">
-	<p>Task3 With OBJLoader<br>Home鍵啟動 上下左右鍵操控 空白鍵煞車</p>
+	<p>HW4<br>上下左右鍵操控</p>
 	</div>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
@@ -42,50 +42,114 @@
 	<script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
 
 
-	
+
 <script>
-var camera, scene, renderer;
-var controls;
+var camera,camera2, scene, renderer, mesh, controls;
 var keyboard = new KeyboardState();
-var clock = new THREE.Clock();
-var toycar = new THREE.Object3D();
-var pos = new THREE.Vector3(0,0,0);
-var vel = new THREE.Vector3(0,0,0);
-var angle = 0;
+var clock;
 var box = new THREE.Object3D();
-var force = new THREE.Vector3();
-var power = 0;
+var toycar = new THREE.Object3D();
+var pos = new THREE.Vector3();
+var speed, angle, vel;
+var cameraHUD, sceneHUD;
+
+(function() {
+  Math.clamp = function(val,min,max){
+    return Math.min(Math.max(val,min),max);
+
+  }})();
+
 init();
 animate();
 
+function initHUD() {
+  // sceneHUD: a simple line boundary
+  sceneHUD = new THREE.Scene();
+  cameraHUD = new THREE.OrthographicCamera(-10.5, 10.5, 10.5, -10.5, -10, 10);
+  cameraHUD.position.z = 5;
 
+  //sceneHUD.add(cameraHUD);
+
+  var lineGeometry = new THREE.Geometry();
+  lineGeometry.vertices.push(new THREE.Vector3(-10, -10, 0),
+    new THREE.Vector3(10, -10, 0),
+    new THREE.Vector3(10, 10, 0),
+    new THREE.Vector3(-10, 10, 0),
+    new THREE.Vector3(-10, -10, 0));
+  var line = new THREE.Line(lineGeometry,
+    new THREE.LineBasicMaterial({
+      color: 0xffffff
+    }));
+  sceneHUD.add(line);
+
+  // depth test for line??
+}
+function unitize (object, targetSize) {
+
+	// find bounding box of 'object'
+	var box3 = new THREE.Box3();
+	box3.setFromObject (object);
+	var size = new THREE.Vector3();
+	size.subVectors (box3.max, box3.min);
+	var center = new THREE.Vector3();
+	center.addVectors(box3.max, box3.min).multiplyScalar (0.5);
+
+	console.log ('center: ' + center.x + ', '+center.y + ', '+center.z );
+	console.log ('size: ' + size.x + ', ' +  size.y + ', '+size.z );
+
+	// uniform scaling according to objSize
+	var objSize = findMax (size);
+	var scaleSet = targetSize/objSize;
+
+	var theObject =  new THREE.Object3D();
+	theObject.add (object);
+	object.scale.set (scaleSet, scaleSet, scaleSet);
+	object.position.set (-center.x*scaleSet, -center.y*scaleSet + size.y/2*scaleSet, -center.z*scaleSet);
+
+	return theObject;
+
+
+	// helper function
+	function findMax(v) {
+		if (v.x > v.y) {
+			return v.x > v.z ? v.x : v.z;
+		} else { // v.y > v.x
+			return v.y > v.z ? v.y : v.z;
+		}
+	}
+
+}
 function init() {
 
-  container = document.createElement('div');
-  document.body.appendChild(container);
-
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 50, 1000);
-  camera.position.y = 150;
-  camera.position.z = 250;
-  
-
-  // scene
-
+  clock = new THREE.Clock();
   scene = new THREE.Scene();
 
-	gridxz = new THREE.GridHelper (200, 20,'red','white');
-	scene.add (gridxz);
-	
-  var ambient = new THREE.AmbientLight(0x444444);
-  scene.add(ambient);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 250;
+  camera.position.y = 50;
 
-  var directionalLight = new THREE.DirectionalLight(0xffffff);
-  directionalLight.position.set(0, 1, 1).normalize();
-  scene.add(directionalLight);
+	camera2 = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
 
-  // model
 
-  var onProgress = function(xhr) {
+  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  scene.add(gridXZ);
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+	initHUD();
+  renderer.autoClear = false;
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  controls.enableKeys = false;
+
+  document.body.appendChild(renderer.domElement);
+  ////////////////////////////////////////////////////////////////////////
+  speed = 10.0;
+  angle = 0.0;
+
+	var onProgress = function(xhr) {
     if (xhr.lengthComputable) {
       var percentComplete = xhr.loaded / xhr.total * 100;
       console.log(Math.round(percentComplete, 2) + '% downloaded');
@@ -99,7 +163,7 @@ function init() {
   var mtlLoader = new THREE.MTLLoader();
   mtlLoader.setPath('resources/');
  	mtlLoader.load('porsche-cayman.mtl', function(materials) {
-	
+
     materials.preload();
 
     var objLoader = new THREE.OBJLoader();
@@ -109,10 +173,10 @@ function init() {
 
 			var theObject =  unitize (object, 30);
 			scene.add (theObject);
-			
-			scene.add (box = new THREE.BoxHelper (theObject));
+			box = new THREE.BoxHelper (theObject)
+			scene.add (box);
 			box.add(theObject);
-			
+
 
 			//////// MATERIAL ADJUSTMENT for porsche ///////////////
 			// transparent window: double-side fix
@@ -127,147 +191,134 @@ function init() {
     }, onProgress, onError);
 
   });
-
-  //
-
-  renderer = new THREE.WebGLRenderer();
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(renderer.domElement);
-	renderer.setClearColor (0x888888);
-
-	controls = new THREE.OrbitControls(camera, renderer.domElement);
-	camera.position.z = 200;
-
-  window.addEventListener('resize', onWindowResize, false);
-
-}
-
-////////////////////////////////////////
-// create an Object3D of the given object
-// so that it is centered at +Y axis
-// 
-function unitize (object, targetSize) {  
-	
-	// find bounding box of 'object'
-	var box3 = new THREE.Box3();
-	box3.setFromObject (object);
-	var size = new THREE.Vector3();
-	size.subVectors (box3.max, box3.min);
-	var center = new THREE.Vector3();
-	center.addVectors(box3.max, box3.min).multiplyScalar (0.5);
-	
-	console.log ('center: ' + center.x + ', '+center.y + ', '+center.z );
-	console.log ('size: ' + size.x + ', ' +  size.y + ', '+size.z );
-	
-	// uniform scaling according to objSize
-	var objSize = findMax (size);
-	var scaleSet = targetSize/objSize;
-				
-	var theObject =  new THREE.Object3D();
-	theObject.add (object);
-	object.scale.set (scaleSet, scaleSet, scaleSet);
-	object.position.set (-center.x*scaleSet, -center.y*scaleSet + size.y/2*scaleSet, -center.z*scaleSet);
-	
-	return theObject;
-	
-	
-	// helper function
-	function findMax(v) {
-		if (v.x > v.y) {
-			return v.x > v.z ? v.x : v.z;
-		} else { // v.y > v.x
-			return v.y > v.z ? v.y : v.z;
-		} 
-	}
-			
-}
-
-
-function onWindowResize() {
-
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
+	var directionalLight = new THREE.DirectionalLight(0xffffff);
+  directionalLight.position.set(0, 1, 1).normalize();
+  scene.add(directionalLight);
+	obstacle1 = new THREE.Mesh(new THREE.CylinderGeometry(10,10,20,20),new THREE.MeshBasicMaterial({color:0x394a67}));
+	obstacle1.position.set(20,10,-40);
+	scene.add(obstacle1);
+	obstacle2 = new THREE.Mesh(new THREE.CylinderGeometry(10,10,20,20),new THREE.MeshBasicMaterial({color:0xc27214}));
+	obstacle2.position.set(80,10,40);
+	scene.add(obstacle2);
+	obstacle3 = new THREE.Mesh(new THREE.CylinderGeometry(10,10,20,20),new THREE.MeshBasicMaterial({color:0x4d7367}));
+	obstacle3.position.set(-50,10,50);
+	scene.add(obstacle3);
 
 }
 
+function update(dt) {
+
+  keyboard.update();
+	if ( keyboard.pressed("left") )
+		angle += 0.01;
+	if ( keyboard.pressed("right") )
+		angle -= 0.01;
+	if ( keyboard.pressed("up") )
+		speed += 0.5;
+	if ( keyboard.pressed("down") )
+		speed -= 0.5;
+
+	speed = Math.clamp (speed, 0.1, 20.0);
+	vel = new THREE.Vector3(speed,0,0);
+
+	vel.applyAxisAngle (new THREE.Vector3(0,1,0), angle);
+	pos.add (vel.clone().multiplyScalar(dt));
+
+}
 
 function animate() {
 
+  controls.update();
+
   var dt = clock.getDelta();
+  update(dt);
 
-	// euler's method
-	tmp = vel.clone();
-	tmp.multiplyScalar (dt);
-	pos.add (tmp);   // pos += vel*dt
-	
-	tmp = force.clone();
-	tmp.multiplyScalar (dt);
-	vel.add (tmp);   // vel += force*dt
-	
-	if (vel.length() > 0) {
-		angle = Math.atan2 (-vel.z, vel.x);  // update orientation
-	}
-
-	if (toycar != undefined) { 
+	if (toycar != undefined) {
 		toycar.scale.set (0.2,0.2,0.2);
 		toycar.position.set (pos.x, pos.y, pos.z);
 		box.position.set(pos.x, pos.y, pos.z);
 		box.rotation.y = (angle+Math.PI/2);
 		toycar.rotation.y = (angle+Math.PI/2);
 	}
-  requestAnimationFrame(animate);
-  update();
+
+	var carv = vel.clone().normalize();
+	var tempV = new THREE.Vector3();
+	tempV.subVectors (obstacle1.position, toycar.position); // c-p
+	var tempVDotCarv = tempV.dot(carv);
+
+	if (tempVDotCarv > 0 && tempVDotCarv < 30) {
+		carv.multiplyScalar (tempVDotCarv);
+		var temp = new THREE.Vector3();
+		temp.subVectors (tempV, carv);
+		if (temp.length() < 30) {
+			speed -= 0.8;
+
+		}
+	}
+	var carv = vel.clone().normalize();
+	var tempV = new THREE.Vector3();
+	tempV.subVectors (obstacle2.position, toycar.position); // c-p
+	var tempVDotCarv = tempV.dot(carv);
+
+	if (tempVDotCarv > 0 && tempVDotCarv < 30) {
+		carv.multiplyScalar (tempVDotCarv);
+		var temp = new THREE.Vector3();
+		temp.subVectors (tempV, carv);
+		if (temp.length() < 30) {
+			speed -= 0.8;
+
+		}
+	}
+	var carv = vel.clone().normalize();
+	var tempV = new THREE.Vector3();
+	tempV.subVectors (obstacle3.position, toycar.position); // c-p
+	var tempVDotCarv = tempV.dot(carv);
+
+	if (tempVDotCarv > 0 && tempVDotCarv < 30) {
+		carv.multiplyScalar (tempVDotCarv);
+		var temp = new THREE.Vector3();
+		temp.subVectors (tempV, carv);
+		if (temp.length() < 30) {
+			speed -= 0.8;
+
+		}
+
+	}
+
+	camera2.position.set(pos.x,pos.y+10,pos.z);
+	var temPos = box.localToWorld(new THREE.Vector3(0,10,15));
+
+	camera2.lookAt(temPos);
+
+	requestAnimationFrame(animate);
   render();
-
-}
-function myclamp(x,lo,hi)
-{
-	if (x < lo) return lo;
-	if (x > hi) return hi;
-	return x;
-}
-function update()
-{
-	controls.update();
-	keyboard.update();
-	if (keyboard.pressed("home"))  
-		power = 5.0;               
-	if (keyboard.pressed("space"))  
-		power = 0;               
-	if (keyboard.pressed("up"))  
-		power *= 1.2;        
-	if (keyboard.pressed("down"))  
-		power /= 1.2;    
-	
-	var angle_thrust = angle;
-	if (keyboard.pressed("left"))  
-		angle_thrust += 0.3;        
-	if (keyboard.pressed("right"))  
-		angle_thrust -= 0.3;       
-	
-	power = myclamp (power, 0, 60.0);		
-
-	// force: vel-aligned thrust
-	var force_gas = new THREE.Vector3(1,0,0);
-	force_gas.applyAxisAngle (new THREE.Vector3(0,1,0), angle_thrust);
-	force_gas.multiplyScalar (power);
-
-	// force: vel-against damping
-	force_damp = vel.clone();
-	force_damp.multiplyScalar (-2);
-
-	force.addVectors (force_gas, force_damp);
 }
 
 function render() {
+	var WW = window.innerWidth;
+  var HH = window.innerHeight;
 
+  renderer.setScissorTest(true);
+
+  renderer.setViewport(0, 0, WW, HH);
+  camera.aspect = WW / HH;
+  camera.updateProjectionMatrix();
+
+  renderer.setScissor(0, 0, WW, HH);
+  renderer.clear();
   renderer.render(scene, camera);
+  //renderer.render(sceneHUD, cameraHUD);
 
+  renderer.setViewport(WW / 2, HH / 2, WW / 3, HH / 3);
+  renderer.setScissor(WW / 2, HH / 2, WW / 3, HH / 3);
+  // no need to set aspect (since it is still ONE)
+  renderer.clear();  // important!
+  renderer.render(sceneHUD, cameraHUD);
+  renderer.render(scene, camera2);
+
+
+  renderer.setScissorTest(false);
 }
-
 
 </script>
 </body>
