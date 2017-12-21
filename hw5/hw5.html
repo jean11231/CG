@@ -110,11 +110,9 @@ function init() {
   ////////////////////////////////////////////////////////////////////////
 	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
 	scene.add( directionalLight );
-
+	///////////////////////////////////////////////////////////////////////
 	var texture = new THREE.TextureLoader().load( 'https://i.imgur.com/rjEHocK.png' );
-
-// immediately use the texture for material creation
-	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xffead1 } );
+	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xe8e1d8  } );
 	var desk = new THREE.Object3D();
 	var deskMesh1 = new THREE.Mesh(new THREE.BoxGeometry(80,2,50),material);
 	desk.add(deskMesh1);
@@ -128,18 +126,46 @@ function init() {
 	deskMesh4.position.x =11;
 	desk.add(deskMesh4);
 	var deskMesh5 = new THREE.Mesh(new THREE.BoxGeometry(80,40,1),material);
-	deskMesh5.position.set(0,-19,-24);
+	deskMesh5.position.set(0,-20,-24);
 	desk.add(deskMesh5);
-	scene.add(desk);
+	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xd8d1c8} );
+	var deskMesh6 = new THREE.Mesh(new THREE.BoxGeometry(26,19,48),material);
+	deskMesh6.position.set(25,-11,0);
+	desk.add(deskMesh6);
+	var deskMesh7 = deskMesh6.clone();
+	deskMesh7.position.set(25,-30.5,0);
+	desk.add(deskMesh7);
+	var material = new THREE.MeshBasicMaterial( { map: texture,color:0x494d52 } );
+	var deskMesh8 = new THREE.Mesh(new THREE.BoxGeometry(5,2,1),material);
+	deskMesh8.position.set(25,-11,25);
+	desk.add(deskMesh8);
+	var deskMesh9 = deskMesh8.clone();
+	desk.add(deskMesh9);
+	deskMesh8.position.set(25,-30.5,25);
 	desk.position.y =39;
+	//scene.add(desk);
 	////////////////////////////////////////////////////////////////////////
 	var Lamp = new THREE.Object3D();
 	Lamp = makeTableLamp();
-	//Lamp.position.set(0,0,0);
+	Lamp.position.set(-30,40,-10);
+	Lamp.rotation.y = 6*Math.PI/7;
 	//scene.add(Lamp);
-
-
-
+	////////////////////////////////////////////////////////////////////////
+	var chair = new THREE.Object3D();
+	chair = makeChair();
+	chair.rotation.y = Math.PI/2;
+	chair.position.set(-12,0,18);
+	//scene.add(chair);
+	///////////////////////////////////////////////////////////////////////
+	var Doll = new THREE.Object3D();
+	Doll = makeDoll();
+	//Doll.rotation.x = -Math.PI/2;
+	scene.add(Doll);
+	///////////////////////////////////////////////////////////////////////
+	var lightBallMat = new THREE.MeshBasicMaterial();
+	var lightBall = new THREE.Mesh(new THREE.SphereGeometry(3.5,30,30),lightBallMat);
+	lightBall.position.set(-18.5,60.5,-6);
+	//scene.add(lightBall);
 
 
 }
@@ -164,6 +190,72 @@ function makeTableLamp(){
 		objLoader.setMaterials(materials);
 		objLoader.setPath('table lamp/');
 		objLoader.load('table lamp.obj', function(object) {
+
+			theObject =  unitize (object, 30);
+			theOb.add(theObject);
+			object.traverse (
+				function(mesh) {
+					if (mesh instanceof THREE.Mesh) {
+						mesh.material.side = THREE.DoubleSide;
+					}
+				});
+		}, onProgress, onError);
+	});
+	return theOb;
+}
+function makeChair(){
+
+	var theOb = new THREE.Object3D();
+	var onProgress = function(xhr) {
+		if (xhr.lengthComputable) {
+			var percentComplete = xhr.loaded / xhr.total * 100;
+			console.log(Math.round(percentComplete, 2) + '% downloaded');
+		}
+	};
+	var onError = function(xhr) {};
+	var mtlLoader = new THREE.MTLLoader();
+	mtlLoader.setPath('chair-obj/');
+	mtlLoader.load('chair.mtl', function(materials) {
+
+		materials.preload();
+
+		var objLoader = new THREE.OBJLoader();
+		objLoader.setMaterials(materials);
+		objLoader.setPath('chair-obj/');
+		objLoader.load('chair.obj', function(object) {
+
+			theObject =  unitize (object, 60);
+			theOb.add(theObject);
+			object.traverse (
+				function(mesh) {
+					if (mesh instanceof THREE.Mesh) {
+						mesh.material.side = THREE.DoubleSide;
+					}
+				});
+		}, onProgress, onError);
+	});
+	return theOb;
+}
+function makeDoll(){
+
+	var theOb = new THREE.Object3D();
+	var onProgress = function(xhr) {
+		if (xhr.lengthComputable) {
+			var percentComplete = xhr.loaded / xhr.total * 100;
+			console.log(Math.round(percentComplete, 2) + '% downloaded');
+		}
+	};
+	var onError = function(xhr) {};
+	var mtlLoader = new THREE.MTLLoader();
+	mtlLoader.setPath('dummy_obj/');
+	mtlLoader.load('dummy_obj.mtl', function(materials) {
+
+		materials.preload();
+
+		var objLoader = new THREE.OBJLoader();
+		objLoader.setMaterials(materials);
+		objLoader.setPath('dummy_obj/');
+		objLoader.load('dummy_obj.obj', function(object) {
 
 			theObject =  unitize (object, 30);
 			theOb.add(theObject);
