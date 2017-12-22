@@ -108,16 +108,16 @@ function init() {
 
   document.body.appendChild(renderer.domElement);
   ////////////////////////////////////////////////////////////////////////
-	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
 	scene.add( directionalLight );
 	///////////////////////////////////////////////////////////////////////
 	var texture = new THREE.TextureLoader().load( 'https://i.imgur.com/rjEHocK.png' );
 	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xe8e1d8  } );
 	var desk = new THREE.Object3D();
-	var deskMesh1 = new THREE.Mesh(new THREE.BoxGeometry(80,2,50),material);
+	var deskMesh1 = new THREE.Mesh(new THREE.BoxGeometry(80,2,50),new THREE.MeshPhongMaterial( { map: texture,color:0xe8e1d8 } ));
 	desk.add(deskMesh1);
 	var deskMesh2 = new THREE.Mesh(new THREE.BoxGeometry(2,40,50),material);
-	deskMesh2.position.set(-39,-20,0);
+	deskMesh2.position.set(-39,-21,0);
 	desk.add(deskMesh2);
 	var deskMesh3 = deskMesh2.clone();
 	desk.add(deskMesh3);
@@ -143,29 +143,46 @@ function init() {
 	desk.add(deskMesh9);
 	deskMesh8.position.set(25,-30.5,25);
 	desk.position.y =39;
-	//scene.add(desk);
+	scene.add(desk);
 	////////////////////////////////////////////////////////////////////////
 	var Lamp = new THREE.Object3D();
 	Lamp = makeTableLamp();
 	Lamp.position.set(-30,40,-10);
 	Lamp.rotation.y = 6*Math.PI/7;
-	//scene.add(Lamp);
+	scene.add(Lamp);
 	////////////////////////////////////////////////////////////////////////
 	var chair = new THREE.Object3D();
 	chair = makeChair();
 	chair.rotation.y = Math.PI/2;
 	chair.position.set(-12,0,18);
-	//scene.add(chair);
+	scene.add(chair);
 	///////////////////////////////////////////////////////////////////////
-	var Doll = new THREE.Object3D();
-	Doll = makeDoll();
-	//Doll.rotation.x = -Math.PI/2;
-	scene.add(Doll);
+	var giftBox = new THREE.Object3D();
+	giftBox = makeGiftBox();
+	giftBox.rotation.x = -Math.PI/2;
+	giftBox.position.set(0,45,5);
+	scene.add(giftBox);
 	///////////////////////////////////////////////////////////////////////
 	var lightBallMat = new THREE.MeshBasicMaterial();
 	var lightBall = new THREE.Mesh(new THREE.SphereGeometry(3.5,30,30),lightBallMat);
 	lightBall.position.set(-18.5,60.5,-6);
-	//scene.add(lightBall);
+	scene.add(lightBall);
+	///////////////////////////////////////////////////////////////////////
+	var spotLight = new THREE.SpotLight( 0xffffff,1.5,50,0.58,0.2,1.5);
+	spotLight.position.set(-18.5,60.5,-6);
+
+	spotLight.castShadow = true;
+
+	spotLight.shadow.mapSize.width = 1024;
+	spotLight.shadow.mapSize.height = 1024;
+
+	spotLight.shadow.camera.near = 10;
+	spotLight.shadow.camera.far = 100;
+	spotLight.shadow.camera.fov = 30;
+	spotLight.target = giftBox;
+	scene.add( spotLight );
+	var spotLightHelper = new THREE.SpotLightHelper( spotLight );
+	scene.add( spotLightHelper );
 
 
 }
@@ -236,7 +253,7 @@ function makeChair(){
 	});
 	return theOb;
 }
-function makeDoll(){
+function makeGiftBox(){
 
 	var theOb = new THREE.Object3D();
 	var onProgress = function(xhr) {
@@ -247,17 +264,17 @@ function makeDoll(){
 	};
 	var onError = function(xhr) {};
 	var mtlLoader = new THREE.MTLLoader();
-	mtlLoader.setPath('dummy_obj/');
-	mtlLoader.load('dummy_obj.mtl', function(materials) {
+	mtlLoader.setPath('BOX_obj/');
+	mtlLoader.load('BOX.mtl', function(materials) {
 
 		materials.preload();
 
 		var objLoader = new THREE.OBJLoader();
 		objLoader.setMaterials(materials);
-		objLoader.setPath('dummy_obj/');
-		objLoader.load('dummy_obj.obj', function(object) {
+		objLoader.setPath('BOX_obj/');
+		objLoader.load('BOX.obj', function(object) {
 
-			theObject =  unitize (object, 30);
+			theObject =  unitize (object, 10);
 			theOb.add(theObject);
 			object.traverse (
 				function(mesh) {

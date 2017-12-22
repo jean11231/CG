@@ -57,3 +57,16 @@
 - 螢幕分割成左右兩viewports: 一邊為上帝視角 (god's eye view), 一編為駕駛的第三人稱視角 (third person view)
 
 [Click here to see my Homework 4](https://jean11231.github.io/CG/hw3/hw3.html)
+
+## Homework 5  (Due 12/22/17) : Class, Raycaster, Shadow Map
+
+- 在網路上找合適的檯燈及椅子模型 (OBJ/MTL)
+- 利用合適的loader將其匯入three.js 場景中，以適當大小呈現
+- 利用BoxGeometry以及合適的材質做出書桌
+- 書桌上放置檯燈以及燈光遙控器 
+- 遙控器上有至少兩個按鈕，以控制檯燈以及室內燈光。
+- 場景內的燈光與物件皆須作shadow map
+- 開關須以class實作，由滑鼠點按觸動
+- [Bonus] 以 PD Control實作燈光之light up/dim out effect
+
+[Click here to see my Homework 5](https://jean11231.github.io/CG/hw5/hw5.html)
