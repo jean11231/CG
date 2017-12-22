@@ -42,12 +42,52 @@
 
 
 <script>
+class Button {
+  constructor(color, name) {
+    this.on = false;
+    this.hsl = color.getHSL();
+    this.obj = this.makeButton(name);
+  }
+
+  get isOn() {
+    return this.on;
+  }
+
+  toggle() {
+    this.on = !this.on;
+    this.update();
+  }
+
+  update() {
+    if (this.on) {
+      this.obj.scale.set (1,0.5,1);
+      this.obj.children[0].material.color.setHSL
+        (this.hsl.h, 0, 1);
+    } else {
+    	this.obj.scale.set(1,1,1);
+    	this.obj.children[0].material.color.setHSL
+         (this.hsl.h, this.hsl.s, this.hsl.l);
+    }
+  }
+
+
+  makeButton(name) {
+    let mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 2),
+      new THREE.MeshLambertMaterial());
+    let button = new THREE.Object3D();
+    button.add(mesh);
+    mesh.material.color.setHSL (this.hsl.h, this.hsl.s, this.hsl.l)
+    mesh.position.y = 2;
+    button.name = name;  // a string
+    return button;
+  }
+
+}
 var camera, scene, renderer, mesh, controls;
 
-var box = new THREE.Object3D();
-var toycar = new THREE.Object3D();
-var pos = new THREE.Vector3();
-
+var raycaster = new THREE.Raycaster();
+var pickables = [];
+var mouse = new THREE.Vector2();
 
 init();
 animate();
@@ -91,30 +131,40 @@ function init() {
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 250;
-  camera.position.y = 50;
+  camera.position.z = 120;
+  camera.position.y = 150;
 
   var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
-  scene.add(gridXZ);
+  //scene.add(gridXZ);
 
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x888888);
 
+	renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
 
   controls.enableKeys = false;
 
   document.body.appendChild(renderer.domElement);
+	document.addEventListener('mousedown', onDocumentMouseDown, false);
   ////////////////////////////////////////////////////////////////////////
-	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+	directionalLight = new THREE.DirectionalLight( 0xffffff, 0 );
+	directionalLight.castShadow = true;
 	scene.add( directionalLight );
+	var light = new THREE.AmbientLight( 0x202020 ); // soft white light
+	scene.add( light );
+	var pointlight = new THREE.PointLight( 0xffffff, 0.6, 100 );
+	pointlight.position.set( 0, 20, 80 );
+	scene.add( pointlight );
 	///////////////////////////////////////////////////////////////////////
 	var texture = new THREE.TextureLoader().load( 'https://i.imgur.com/rjEHocK.png' );
-	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xe8e1d8  } );
+	var material = new THREE.MeshLambertMaterial( { map: texture,color:0xe8e1d8  } );
 	var desk = new THREE.Object3D();
 	var deskMesh1 = new THREE.Mesh(new THREE.BoxGeometry(80,2,50),new THREE.MeshPhongMaterial( { map: texture,color:0xe8e1d8 } ));
+	deskMesh1.receiveShadow = true;
 	desk.add(deskMesh1);
 	var deskMesh2 = new THREE.Mesh(new THREE.BoxGeometry(2,40,50),material);
 	deskMesh2.position.set(-39,-21,0);
@@ -125,17 +175,17 @@ function init() {
 	var deskMesh4 = deskMesh2.clone();
 	deskMesh4.position.x =11;
 	desk.add(deskMesh4);
-	var deskMesh5 = new THREE.Mesh(new THREE.BoxGeometry(80,40,1),material);
-	deskMesh5.position.set(0,-20,-24);
+	var deskMesh5 = new THREE.Mesh(new THREE.BoxGeometry(80,39,1),material);
+	deskMesh5.position.set(0,-20.5,-24);
 	desk.add(deskMesh5);
-	var material = new THREE.MeshBasicMaterial( { map: texture,color:0xd8d1c8} );
+	var material = new THREE.MeshLambertMaterial( { map: texture,color:0xd8d1c8} );
 	var deskMesh6 = new THREE.Mesh(new THREE.BoxGeometry(26,19,48),material);
 	deskMesh6.position.set(25,-11,0);
 	desk.add(deskMesh6);
 	var deskMesh7 = deskMesh6.clone();
 	deskMesh7.position.set(25,-30.5,0);
 	desk.add(deskMesh7);
-	var material = new THREE.MeshBasicMaterial( { map: texture,color:0x494d52 } );
+	var material = new THREE.MeshLambertMaterial( { map: texture,color:0x494d52 } );
 	var deskMesh8 = new THREE.Mesh(new THREE.BoxGeometry(5,2,1),material);
 	deskMesh8.position.set(25,-11,25);
 	desk.add(deskMesh8);
@@ -154,21 +204,22 @@ function init() {
 	var chair = new THREE.Object3D();
 	chair = makeChair();
 	chair.rotation.y = Math.PI/2;
-	chair.position.set(-12,0,18);
+	chair.position.set(-13,-2,18);
 	scene.add(chair);
 	///////////////////////////////////////////////////////////////////////
 	var giftBox = new THREE.Object3D();
 	giftBox = makeGiftBox();
 	giftBox.rotation.x = -Math.PI/2;
 	giftBox.position.set(0,45,5);
+
 	scene.add(giftBox);
 	///////////////////////////////////////////////////////////////////////
-	var lightBallMat = new THREE.MeshBasicMaterial();
+	lightBallMat = new THREE.MeshBasicMaterial({color:0x202020});
 	var lightBall = new THREE.Mesh(new THREE.SphereGeometry(3.5,30,30),lightBallMat);
 	lightBall.position.set(-18.5,60.5,-6);
 	scene.add(lightBall);
 	///////////////////////////////////////////////////////////////////////
-	var spotLight = new THREE.SpotLight( 0xffffff,1.5,50,0.58,0.2,1.5);
+	spotLight = new THREE.SpotLight( 0xffffff,0,50,0.58,0.2,1.5);
 	spotLight.position.set(-18.5,60.5,-6);
 
 	spotLight.castShadow = true;
@@ -182,7 +233,26 @@ function init() {
 	spotLight.target = giftBox;
 	scene.add( spotLight );
 	var spotLightHelper = new THREE.SpotLightHelper( spotLight );
-	scene.add( spotLightHelper );
+	//scene.add( spotLightHelper );
+	/////////////////////////////////////////////////////////////////////
+	button = new Button(new THREE.Color (0x92c7e6), 'roomLight');
+  scene.add(button.obj);
+	button.obj.position.set(-35,40,22);
+  pickables.push(button.obj);
+
+  button2 = new Button(new THREE.Color (0xb383d1), 'spotLight');
+  scene.add(button2.obj);
+  button2.obj.position.set(-31,40,22);
+  pickables.push(button2.obj);
+
+	var bottonBox = new THREE.Mesh(new THREE.BoxGeometry(8,1,4),new THREE.MeshBasicMaterial());
+	scene.add(bottonBox);
+	bottonBox.position.set(-33,40.5,22);
+	///////////////////////////////////////////////////////////////////
+	var floor = new THREE.Mesh(new THREE.PlaneGeometry(120,120),new THREE.MeshLambertMaterial({color:0x9d9386,side : THREE.DoubleSide}));
+	floor.position.y = -2.01;
+	floor.rotation.x = Math.PI/2;
+	scene.add(floor);
 
 
 }
@@ -214,6 +284,8 @@ function makeTableLamp(){
 				function(mesh) {
 					if (mesh instanceof THREE.Mesh) {
 						mesh.material.side = THREE.DoubleSide;
+						mesh.castShadow = true;
+        		mesh.receiveShadow = true;
 					}
 				});
 		}, onProgress, onError);
@@ -280,11 +352,50 @@ function makeGiftBox(){
 				function(mesh) {
 					if (mesh instanceof THREE.Mesh) {
 						mesh.material.side = THREE.DoubleSide;
+						mesh.castShadow = true;
+        		mesh.receiveShadow = true;
 					}
 				});
 		}, onProgress, onError);
 	});
+
 	return theOb;
+}
+function onDocumentMouseDown(event) {
+
+  event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // find intersections
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(pickables, true);
+  if (intersects.length > 0) {
+    let picked = intersects[0].object.parent.name;
+    switch (picked) {
+    case 'roomLight':
+    	button.toggle();
+			if(!button.on){
+				directionalLight.intensity = 0;
+			}
+			else {
+				directionalLight.intensity = 0.8;
+			}
+      break;
+    case 'spotLight':
+    	button2.toggle();
+			if(!button2.on){
+				spotLight.intensity = 0;
+				lightBallMat.color = new THREE.Color(0x202020);
+			}
+			else {
+				lightBallMat.color = new THREE.Color(0xffffff);
+				spotLight.intensity = 1;
+			}
+      break;
+    }
+  }
+
 }
 function animate() {
 
