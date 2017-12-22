@@ -160,7 +160,9 @@ function init() {
 	pointlight.position.set( 0, 20, 80 );
 	scene.add( pointlight );
 	///////////////////////////////////////////////////////////////////////
-	var texture = new THREE.TextureLoader().load( 'https://i.imgur.com/rjEHocK.png' );
+	var loader = new THREE.TextureLoader();
+    loader.crossOrigin = "";
+  var texture = loader.load('https://i.imgur.com/rjEHocK.png');
 	var material = new THREE.MeshLambertMaterial( { map: texture,color:0xe8e1d8  } );
 	var desk = new THREE.Object3D();
 	var deskMesh1 = new THREE.Mesh(new THREE.BoxGeometry(80,2,50),new THREE.MeshPhongMaterial( { map: texture,color:0xe8e1d8 } ));
